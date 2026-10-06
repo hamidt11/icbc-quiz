@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICBC Class 4 — Signs, Signals & Road Markings Quiz</title>
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --accent: #003366;
+    --accent2: #d4a017;
+    --correct: #1a7a2e;
+    --wrong: #c0392b;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --muted: #555;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 { color: var(--accent); margin-bottom: 4px; font-size: 1.6rem; }
+  .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 0.9rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 720px;
+    width: 100%;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.4s;
+  }
+  .qnum { color: var(--accent2); font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+  .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border 0.2s, background 0.2s;
+    font-size: 0.97rem;
+    line-height: 1.4;
+  }
+  .opt:hover { border-color: var(--accent); background: #f0f4ff; }
+  .opt input { accent-color: var(--accent); margin-top: 2px; }
+  .opt.correct { border-color: var(--correct); background: #e6f7ea; }
+  .opt.wrong { border-color: var(--wrong); background: #fdecea; }
+  .opt.disabled { pointer-events: none; opacity: 0.7; }
+  .btn {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: none;
+  }
+  .btn:hover { background: #002244; }
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { background: #e6f7ea; border-left: 4px solid var(--correct); color: #155724; }
+  .feedback.wrong { background: #fdecea; border-left: 4px solid var(--wrong); color: #721c24; }
+  .result { text-align: center; padding: 20px 0; }
+  .result h2 { color: var(--accent); margin-bottom: 10px; }
+  .result .score { font-size: 2.4rem; font-weight: 700; color: var(--accent2); }
+  .result .detail { color: var(--muted); margin-top: 8px; }
+  .restart-btn {
+    margin-top: 18px;
+    padding: 10px 28px;
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: #b8860b; }
+  .summary { margin-top: 16px; text-align: left; }
+  .summary-item {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .summary-item .mark { font-weight: 700; margin-right: 6px; }
+  .summary-item .c { color: var(--correct); }
+  .summary-item .w { color: var(--wrong); }
+  @media (max-width: 600px) {
+    .card { padding: 18px 16px; }
+    h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🚌 ICBC Class 4 — Signs, Signals & Road Markings</h1>
+<p class="subtitle">Construction zones, school zones, signals, road markings — 35 questions</p>
+
+<div class="card" id="quiz-card">
+  <div class="progress-bar"><div class="fill" id="progress" style="width:0%"></div></div>
+  <div id="quiz-area"></div>
+  <button class="btn" id="next-btn" onclick="nextQuestion()">Next →</button>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const rawQuestions = [
+// === Signs ===
+{
+  q: "Regulatory signs:",
+  opts: ["Are only suggestions", "Tell you about driving laws — disregarding them is an offence under the B.C. Motor Vehicle Act", "Are optional for passenger vehicles", "Only apply to commercial vehicles"],
+  ans: 1,
+  expl: "Regulatory signs tell you about driving laws — it is an offence under the B.C. Motor Vehicle Act to disregard them."
+},
+{
+  q: "A 'No stopping' sign means:",
+  opts: ["You may stop briefly to load passengers", "No stopping between here and the next no-stopping sign", "Only stop for emergencies", "Stop only during posted times"],
+  ans: 1,
+  expl: "No stopping — no stopping between here and the next no-stopping sign."
+},
+{
+  q: "A 'Do not enter' sign means:",
+  opts: ["You may enter if the road looks clear", "Do not enter — wrong way", "Only do not enter during rush hour", "Stop and then enter"],
+  ans: 1,
+  expl: "Do not enter — usually mounted on exit ramps, wrong way."
+},
+{
+  q: "A 'Do not pass' sign means:",
+  opts: ["You may pass if the road is clear", "Do not pass — it is an offence", "Only pass trucks", "Pass only during daytime"],
+  ans: 1,
+  expl: "Do not pass — do not pass where this sign is posted."
+},
+{
+  q: "A 'Keep right of the divider' sign means:",
+  opts: ["Keep left", "Keep right of the divider unless passing", "Stop at the divider", "Turn around"],
+  ans: 1,
+  expl: "Keep right of the divider unless passing."
+},
+{
+  q: "A 'Slow vehicles use pullouts' sign means:",
+  opts: ["Pull over and stop", "Slow vehicles must use pullouts for the stated distance", "Only trucks must use pullouts", "Pullouts are optional"],
+  ans: 1,
+  expl: "Slow vehicles to use pullouts for the next stated distance."
+},
+{
+  q: "A 'Winter tires or chains' sign means:",
+  opts: ["Optional during winter", "Winter tires or chains must be used when the sign is displayed", "Only chains required", "Only on mountain highways"],
+  ans: 1,
+  expl: "Winter tires or chains must be used when the sign displaying the requirement is displayed."
+},
+{
+  q: "School zone signs are what colour?",
+  opts: ["Red and white", "Fluorescent yellow-green", "Blue", "Orange"],
+  ans: 1,
+  expl: "School zone signs are fluorescent yellow-green."
+},
+{
+  q: "A pedestrian-activated crosswalk sign means:",
+  opts: ["Always stop", "Prepare to stop if the light is flashing", "Only stop during school days", "Ignore unless a guard is present"],
+  ans: 1,
+  expl: "Pedestrian activated crosswalk — prepare to stop if the light is flashing."
+},
+{
+  q: "A school crosswalk sign means you must:",
+  opts: ["Always stop", "Yield to pedestrians — if there is a crossing guard, follow their directions", "Only stop during school days", "Honk before crossing"],
+  ans: 1,
+  expl: "School crosswalk — yield to pedestrians — if there is a crossing guard, follow directions."
+},
+{
+  q: "A playground zone sign means:",
+  opts: ["30 km/h only on weekends", "30 km/h in effect every day from dawn to dusk", "50 km/h limit", "No speed limit"],
+  ans: 1,
+  expl: "Playground zone — 30 km/h limit in effect every day from dawn to dusk."
+},
+{
+  q: "A school zone speed limit tab shows:",
+  opts: ["Only the speed", "The speed limit and the hours it is in effect", "Only the hours", "Only the days"],
+  ans: 1,
+  expl: "School zone tab indicates the speed limit and the hours it is in effect."
+},
+{
+  q: "Construction zone signs are what colour?",
+  opts: ["Green and white", "Orange", "Red and white", "Yellow"],
+  ans: 1,
+  expl: "Construction signs are orange — warns of construction zones."
+},
+{
+  q: "Warning signs are what shape and colour?",
+  opts: ["Square, red", "Diamond, yellow", "Circle, white", "Triangle, blue"],
+  ans: 1,
+  expl: "Warning signs are diamond-shaped and yellow."
+},
+{
+  q: "Information and destination signs are what colour?",
+  opts: ["Red", "Green", "Orange", "Yellow"],
+  ans: 1,
+  expl: "Information and destination signs are green."
+},
+{
+  q: "Railway crossing signs are what colour?",
+  opts: ["Green", "Red and white", "Yellow", "Blue"],
+  ans: 1,
+  expl: "Railway signs are red and white — circular with an X."
+},
+
+// === Signals ===
+{
+  q: "Lane control signals:",
+  opts: ["Only apply to highways", "Control which lanes may be used (arrow/X signals)", "Only apply to buses", "Are optional"],
+  ans: 1,
+  expl: "Lane control signals — control which lanes may be used with arrow/X signals."
+},
+{
+  q: "A red X in a lane control signal means:",
+  opts: ["Lane is open", "Lane is closed — do not use", "Slow down", "Only for trucks"],
+  ans: 1,
+  expl: "Red X — lane is closed, do not use that lane."
+},
+{
+  q: "A green arrow in a lane control signal means:",
+  opts: ["Lane is closed", "Lane is open in the direction of the arrow", "Only for turning", "Only for buses"],
+  ans: 1,
+  expl: "Green arrow — lane is open in the direction of the arrow."
+},
+{
+  q: "A yellow X in a lane control signal means:",
+  opts: ["Lane is permanently closed", "Lane is closing — clear the lane", "Lane is open", "Speed up"],
+  ans: 1,
+  expl: "Yellow X — lane is closing, clear the lane."
+},
+{
+  q: "When a traffic light is red, you must:",
+  opts: ["Slow down and proceed", "Stop completely — continue only when safe", "Honk and proceed", "Only stop if pedestrians are present"],
+  ans: 1,
+  expl: "Red light — stop completely, continue only when safe."
+},
+{
+  q: "A flashing red traffic light means:",
+  opts: ["Proceed without stopping", "Stop and proceed when safe (same as a stop sign)", "Only stop for trucks", "Slow down only"],
+  ans: 1,
+  expl: "Flashing red — stop and proceed when safe, same as a stop sign."
+},
+{
+  q: "A flashing yellow traffic light means:",
+  opts: ["Stop completely", "Proceed with caution", "Only for pedestrians", "Only for emergency vehicles"],
+  ans: 1,
+  expl: "Flashing yellow — proceed with caution."
+},
+{
+  q: "A steady yellow light means:",
+  opts: ["Speed up to clear the intersection", "Warning — light is about to turn red, prepare to stop", "Go faster", "Only for trucks"],
+  ans: 1,
+  expl: "Steady yellow — warning that the light is about to turn red, prepare to stop."
+},
+{
+  q: "A green light means:",
+  opts: ["Stop immediately", "Go if the way is clear — yield to vehicles/pedestrians still in the intersection", "Honk and proceed", "Only proceed if no pedestrians"],
+  ans: 1,
+  expl: "Green light — go if the way is clear, yield to vehicles/pedestrians still in the intersection."
+},
+{
+  q: "A green arrow means:",
+  opts: ["Turn in any direction", "Protected turn — oncoming traffic is stopped", "Only for buses", "Only during daytime"],
+  ans: 1,
+  expl: "Green arrow — protected turn, oncoming traffic is stopped."
+},
+
+// === Road markings ===
+{
+  q: "Yellow lines on the road separate:",
+  opts: ["Lanes going the same direction", "Traffic flowing in opposite directions", "Bicycle lanes", "Parking zones"],
+  ans: 1,
+  expl: "Yellow lines separate opposing traffic flows."
+},
+{
+  q: "White lines on the road separate:",
+  opts: ["Opposing traffic", "Lanes of traffic going the same direction", "Parking zones", "Bicycle lanes"],
+  ans: 1,
+  expl: "White lines separate lanes of traffic going the same direction."
+},
+{
+  q: "A double yellow solid line means:",
+  opts: ["Passing allowed both ways", "No passing either direction", "Passing only for trucks", "Passing allowed during daytime"],
+  ans: 1,
+  expl: "Double yellow solid line — no passing either direction."
+},
+{
+  q: "A solid yellow line next to a dashed yellow line means:",
+  opts: ["Passing allowed both ways", "Passing allowed only from the side with the dashed line", "No passing either way", "Only for buses"],
+  ans: 1,
+  expl: "Passing allowed only from the side with the dashed line."
+},
+{
+  q: "White stop lines at intersections indicate:",
+  opts: ["Where to park", "Where to stop behind", "Where to turn", "Where to yield"],
+  ans: 1,
+  expl: "White stop lines indicate where to stop behind at intersections."
+},
+{
+  q: "Reserved lane markings:",
+  opts: ["Apply to all vehicles at all times", "Mark lanes reserved for specific vehicles during certain hours", "Only for parking", "Only for emergency vehicles"],
+  ans: 1,
+  expl: "Reserved lane markings — lanes reserved for specific vehicles during certain hours."
+},
+{
+  q: "A diamond-shaped road marking usually indicates:",
+  opts: ["A pedestrian crossing", "A lane reserved for specific use (e.g., HOV, transit, bus)", "A construction zone", "A bicycle lane"],
+  ans: 1,
+  expl: "Diamond markings indicate a lane reserved for specific use."
+},
+{
+  q: "HOV (High Occupancy Vehicle) lane markings are:",
+  opts: ["Red dashed lines", "White diamond shapes", "Yellow solid lines", "Green stripes"],
+  ans: 1,
+  expl: "HOV lanes are marked with white diamond shapes."
+},
+
+// === Construction zones ===
+{
+  q: "In a construction zone, you should:",
+  opts: ["Speed up to clear quickly", "Slow down, obey flaggers and posted signs, be prepared to stop", "Ignore temporary signs", "Only slow if workers are visible"],
+  ans: 1,
+  expl: "Slow down, obey flaggers and posted signs, be prepared to stop in construction zones."
+},
+{
+  q: "Construction zone signs are:",
+  opts: ["Green and white", "Orange with black text", "Red and white", "Yellow with black text"],
+  ans: 1,
+  expl: "Construction signs are orange with black text."
+},
+{
+  q: "If a flagger is directing traffic in a construction zone, you must:",
+  opts: ["Follow your own judgment", "Obey the flagger's directions", "Only stop if the flagger raises a red flag", "Honk and proceed"],
+  ans: 1,
+  expl: "Obey the flagger's directions — they have the same authority as a sign."
+},
+{
+  q: "Near a construction zone, the speed limit:",
+  opts: ["Stays the same regardless", "May be reduced — obey posted construction zone speed limit", "Is always 30 km/h", "Is always 50 km/h"],
+  ans: 1,
+  expl: "Obey the posted construction zone speed limit — may be reduced."
+},
+
+// === Sharing the road / special ===
+{
+  q: "When approaching a stopped emergency vehicle with flashing lights on a highway, you must:",
+  opts: ["Speed up to pass quickly", "Slow down and move over if safe", "Honk and pass", "Ignore if no sirens"],
+  ans: 1,
+  expl: "Stopped vehicles with flashing lights: slow down and move over if safe."
+},
+{
+  q: "When sharing the road with cyclists, you should:",
+  opts: ["Drive close to force them off", "Give them space, check before opening doors, yield at intersections", "Honk repeatedly", "Pass in the same lane"],
+  ans: 1,
+  expl: "Give cyclists space, check before opening doors, yield at intersections."
+},
+{
+  q: "When passing a cyclist, you should:",
+  opts: ["Pass in the same lane", "Leave at least 1 metre of space between your vehicle and the cyclist", "Honk to warn them", "Drive close to scare them"],
+  ans: 1,
+  expl: "Leave at least 1 metre of space when passing a cyclist."
+}
+];
+
+// Shuffle answers for each question
+const questions = rawQuestions.map(q => {
+  const indexed = q.opts.map((opt, i) => ({ text: opt, originalIndex: i }));
+  shuffle(indexed);
+  const newAns = indexed.findIndex(x => x.originalIndex === q.ans);
+  return {
+    q: q.q,
+    opts: indexed.map(x => x.text),
+    ans: newAns,
+    expl: q.expl
+  };
+});
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = new Array(questions.length).fill(null);
+
+function render() {
+  if (current >= questions.length) { showResult(); return; }
+  const q = questions[current];
+  answered = false;
+  const pct = ((current) / questions.length * 100).toFixed(0);
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+
+  let html = `<div class="qnum">Question ${current + 1} of ${questions.length}</div>`;
+  html += `<div class="question">${q.q}</div>`;
+  html += `<div class="options">`;
+  q.opts.forEach((o, i) => {
+    html += `<label class="opt" onclick="select(${i})">
+      <input type="radio" name="ans" value="${i}">
+      <span>${String.fromCharCode(65 + i)}. ${o}</span>
+    </label>`;
+  });
+  html += `</div>`;
+  document.getElementById('quiz-area').innerHTML = html;
+}
+
+function select(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  userAnswers[current] = idx;
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach((el, i) => {
+    el.classList.add('disabled');
+    if (i === q.ans) el.classList.add('correct');
+    if (i === idx && idx !== q.ans) el.classList.add('wrong');
+  });
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (idx === q.ans ? 'correct' : 'wrong');
+  if (idx === q.ans) {
+    score++;
+    fb.innerHTML = `<strong>✅ Correct!</strong><br>${q.expl}`;
+  } else {
+    fb.innerHTML = `<strong>❌ Incorrect.</strong> The correct answer is <strong>${String.fromCharCode(65 + q.ans)}</strong>.<br>${q.expl}`;
+  }
+  const btn = document.getElementById('next-btn');
+  btn.style.display = 'inline-block';
+  btn.textContent = current < questions.length - 1 ? 'Next →' : 'See Results';
+}
+
+function nextQuestion() {
+  current++;
+  render();
+}
+
+function showResult() {
+  let pass = score >= 28 ? '🎉 PASS' : '❌ Not quite — study and retry';
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('quiz-area').innerHTML = `
+    <div class="result">
+      <h2>Quiz Complete</h2>
+      <div class="score">${score} / ${questions.length}</div>
+      <p><strong>${pass}</strong></p>
+      <p class="detail">You need 28/35 (80%) to pass the actual ICBC knowledge test.</p>
+      <div class="summary" id="summary"></div>
+      <button class="restart-btn" onclick="restart()">🔄 Retry Quiz</button>
+    </div>`;
+  const sum = document.getElementById('summary');
+  questions.forEach((q, i) => {
+    const ok = userAnswers[i] === q.ans;
+    const div = document.createElement('div');
+    div.className = 'summary-item';
+    div.innerHTML = `<span class="mark ${ok ? 'c' : 'w'}">${ok ? '✓' : '✗'} Q${i+1}</span> ${String.fromCharCode(65 + q.ans)}`;
+    sum.appendChild(div);
+  });
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+}
+
+function restart() {
+  current = 0;
+  score = 0;
+  userAnswers = new Array(questions.length).fill(null);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
