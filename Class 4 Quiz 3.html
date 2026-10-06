@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICBC Class 4 Knowledge Test — Quiz #3</title>
+<style>
+  :root {
+    --bg: #f5f5f0;
+    --card: #ffffff;
+    --accent: #003366;
+    --accent2: #d4a017;
+    --correct: #1a7a2e;
+    --wrong: #c0392b;
+    --border: #ddd;
+    --text: #1a1a1a;
+    --muted: #555;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  h1 { color: var(--accent); margin-bottom: 4px; font-size: 1.6rem; }
+  .subtitle { color: var(--muted); margin-bottom: 20px; font-size: 0.9rem; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    max-width: 720px;
+    width: 100%;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+  .progress-bar {
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width 0.4s;
+  }
+  .qnum { color: var(--accent2); font-weight: 700; font-size: 0.85rem; margin-bottom: 6px; }
+  .question { font-size: 1.1rem; font-weight: 600; margin-bottom: 18px; line-height: 1.5; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border 0.2s, background 0.2s;
+    font-size: 0.97rem;
+    line-height: 1.4;
+  }
+  .opt:hover { border-color: var(--accent); background: #f0f4ff; }
+  .opt input { accent-color: var(--accent); margin-top: 2px; }
+  .opt.correct { border-color: var(--correct); background: #e6f7ea; }
+  .opt.wrong { border-color: var(--wrong); background: #fdecea; }
+  .opt.disabled { pointer-events: none; opacity: 0.7; }
+  .btn {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: none;
+  }
+  .btn:hover { background: #002244; }
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.correct { background: #e6f7ea; border-left: 4px solid var(--correct); color: #155724; }
+  .feedback.wrong { background: #fdecea; border-left: 4px solid var(--wrong); color: #721c24; }
+  .result { text-align: center; padding: 20px 0; }
+  .result h2 { color: var(--accent); margin-bottom: 10px; }
+  .result .score { font-size: 2.4rem; font-weight: 700; color: var(--accent2); }
+  .result .detail { color: var(--muted); margin-top: 8px; }
+  .restart-btn {
+    margin-top: 18px;
+    padding: 10px 28px;
+    background: var(--accent2);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  .restart-btn:hover { background: #b8860b; }
+  .summary { margin-top: 16px; text-align: left; }
+  .summary-item {
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .summary-item .mark { font-weight: 700; margin-right: 6px; }
+  .summary-item .c { color: var(--correct); }
+  .summary-item .w { color: var(--wrong); }
+  @media (max-width: 600px) {
+    .card { padding: 18px 16px; }
+    h1 { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<h1>🚌 ICBC Class 4 Knowledge Test — Quiz #3</h1>
+<p class="subtitle">Mostly from driving-manual — mixed answer positions — 35 questions, 4 choices each</p>
+
+<div class="card" id="quiz-card">
+  <div class="progress-bar"><div class="fill" id="progress" style="width:0%"></div></div>
+  <div id="quiz-area"></div>
+  <button class="btn" id="next-btn" onclick="nextQuestion()">Next →</button>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+// Shuffle array helper
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+const rawQuestions = [
+// === Driving Manual questions ===
+{
+  q: "A thinking driver chooses to:",
+  opts: ["Drive fast to save time", "Be fit to drive, make good decisions, take responsibility", "Ignore other road users", "Only follow signs when convenient"],
+  ans: 1,
+  expl: "A thinking driver chooses to be fit to drive, make good decisions, and take responsibility."
+},
+{
+  q: "If you are overtired, what should you do?",
+  opts: ["Drink coffee and keep driving", "Avoid driving — even if you don't fall asleep, reaction time is slowed", "Open the windows and drive faster", "Turn up the radio"],
+  ans: 1,
+  expl: "Never drive when overtired — it slows reaction time even if you don't fall asleep."
+},
+{
+  q: "What is the speed limit within cities and towns in B.C. unless otherwise posted?",
+  opts: ["80 km/h", "50 km/h", "20 km/h", "100 km/h"],
+  ans: 1,
+  expl: "Unless a sign tells you otherwise, speed limits are 50 km/h within cities and towns."
+},
+{
+  q: "What is the speed limit outside cities and towns in B.C. unless otherwise posted?",
+  opts: ["50 km/h", "100 km/h", "80 km/h", "60 km/h"],
+  ans: 2,
+  expl: "Unless a sign tells you otherwise, speed limits are 80 km/h outside cities and towns."
+},
+{
+  q: "Playground zone speed limit is:",
+  opts: ["50 km/h", "30 km/h in effect every day from dawn to dusk", "Only on weekends", "Only during school days"],
+  ans: 1,
+  expl: "Playground zone: 30 km/h limit in effect every day from dawn to dusk."
+},
+{
+  q: "Wearing a seatbelt:",
+  opts: ["Is optional on short trips", "Significantly reduces chance of serious injury or death and is the law in B.C.", "Only needed on highways", "Only needed if there are passengers"],
+  ans: 1,
+  expl: "Seatbelt significantly reduces chance of serious injury or death — it's the law in B.C."
+},
+{
+  q: "If your vehicle rolls over or you're ejected, what is the likely outcome without a seatbelt?",
+  opts: ["Minor injury", "Seriously injured or killed", "No injury", "Only property damage"],
+  ans: 1,
+  expl: "If your vehicle rolls over or you're ejected, it's likely you'll be seriously injured or killed."
+},
+{
+  q: "When should children ride in the back seat?",
+  opts: ["Only under 5 years old", "Recommended until age 12", "Only when using a booster", "Only on highways"],
+  ans: 1,
+  expl: "Keep children in the back seat until 12 years of age."
+},
+{
+  q: "A booster seat is required until the child reaches:",
+  opts: ["100 cm (3'3\")", "145 cm (4'9\")", "120 cm (3'11\")", "90 cm (2'11\")"],
+  ans: 1,
+  expl: "Booster seat required until at least 9 years old or 145 cm (4'9\"), whichever comes first."
+},
+{
+  q: "Airbags:",
+  opts: ["Replace seatbelts", "Do not replace seatbelts — always use your seatbelt even with airbags", "Only work in high-speed crashes", "Only protect the driver"],
+  ans: 1,
+  expl: "Airbags do not replace seatbelts. Always use your seatbelt even if your vehicle has airbags."
+},
+{
+  q: "The ignition switch position 'Start' is used to:",
+  opts: ["Turn on the radio", "Start the engine — release it so it returns to On", "Lock the steering", "Turn off all electronics"],
+  ans: 1,
+  expl: "Start — turn to this position to start the engine, then release so it returns to On."
+},
+{
+  q: "Do NOT turn the ignition to 'Lock' while the vehicle is:",
+  opts: ["Parked", "In motion — it can cause steering to lock and loss of control", "At a red light", "Idling"],
+  ans: 1,
+  expl: "Don't turn ignition to lock while in motion — steering can lock and you could lose control."
+},
+{
+  q: "A standard transmission:",
+  opts: ["Always uses a clutch", "Has no clutch", "Is automatic", "Only has 2 gears"],
+  ans: 0,
+  expl: "A standard transmission is always used with a clutch."
+},
+{
+  q: "A four-way stop: if two vehicles arrive at the same time, who goes first?",
+  opts: ["The one on the left", "The one on the right", "The bigger vehicle", "The faster vehicle"],
+  ans: 1,
+  expl: "If two vehicles arrive at the same time, the one on the right should go first."
+},
+{
+  q: "A four-way stop: if two vehicles face each other and both arrive at the same time, who goes first?",
+  opts: ["The one turning left", "The one going straight through", "The bigger vehicle", "The slower vehicle"],
+  ans: 1,
+  expl: "If facing each other, the one making a left turn yields to the one going straight through."
+},
+{
+  q: "A yield sign means you must:",
+  opts: ["Come to a complete stop always", "Let traffic on the through road have right-of-way; slow down and stop if necessary", "Speed up to clear the intersection", "Only yield to pedestrians"],
+  ans: 1,
+  expl: "Yield sign means let traffic on the through road have right-of-way; slow down and stop if necessary."
+},
+{
+  q: "In a traffic circle, you must:",
+  opts: ["Enter going straight", "Turn right to enter and right to leave; yield to vehicles already in the circle", "Turn left to enter", "Honk before entering"],
+  ans: 1,
+  expl: "Turn right to enter and right to leave. Yield to vehicles already in the circle."
+},
+{
+  q: "If another vehicle arrives at a traffic circle at the same time as you, who has right-of-way?",
+  opts: ["The one on the left", "The one on your right", "The bigger vehicle", "The faster vehicle"],
+  ans: 1,
+  expl: "Yield to the vehicle on your right if both arrive at the same time."
+},
+{
+  q: "School zone speed limit when children are present (with no tab specifying):",
+  opts: ["30 km/h", "50 km/h", "80 km/h", "20 km/h"],
+  ans: 1,
+  expl: "School zone — 50 km/h limit in effect from 8 a.m. to 5 p.m. on school days when children are on the roadway."
+},
+{
+  q: "Regulatory signs:",
+  opts: ["Are only suggestions", "Tell you about driving laws — disregarding them is an offence under the B.C. Motor Vehicle Act", "Are optional", "Only apply to trucks"],
+  ans: 1,
+  expl: "Regulatory signs tell you about driving laws — it is an offence under the B.C. Motor Vehicle Act to disregard them."
+},
+{
+  q: "A 'No stopping' sign means:",
+  opts: ["You may stop briefly", "No stopping between here and the next no-stopping sign", "Only stop for emergencies", "Stop only during posted times"],
+  ans: 1,
+  expl: "No stopping — no stopping between here and the next no-stopping sign."
+},
+{
+  q: "Winter tires or chains are required when:",
+  opts: ["It is snowing only", "The sign displaying the requirement is shown", "All winter months", "Only on highways"],
+  ans: 1,
+  expl: "Winter tires or chains must be used when the sign displaying the requirement is displayed."
+},
+{
+  q: "Yellow road markings separate:",
+  opts: ["Lanes going the same direction", "Traffic flowing in opposite directions", "Bicycle lanes", "Parking zones"],
+  ans: 1,
+  expl: "Yellow lines separate opposing traffic flows."
+},
+{
+  q: "White road markings separate:",
+  opts: ["Opposing traffic", "Lanes of traffic going the same direction", "Parking zones", "Bicycle lanes"],
+  ans: 1,
+  expl: "White lines separate lanes of traffic going the same direction."
+},
+{
+  q: "Appropriate speed means:",
+  opts: ["Always the posted limit", "A speed appropriate for conditions — posted limit is the maximum for ideal conditions only", "As fast as possible", "As slow as possible"],
+  ans: 1,
+  expl: "The posted speed is the maximum for ideal conditions only. Choose a slower speed if conditions are not ideal."
+},
+{
+  q: "To keep a steady speed you should:",
+  opts: ["Brake hard then accelerate", "Use brake and accelerator smoothly and anticipate", "Keep the throttle fully pressed", "Ignore speed limits"],
+  ans: 1,
+  expl: "Use brake and accelerator smoothly. Anticipate — slow down gradually before stops."
+},
+{
+  q: "The two-second rule is about:",
+  opts: ["Signal timing", "Following distance — maintain at least 2 seconds behind the vehicle ahead", "Turn signal duration", "Horn honk duration"],
+  ans: 1,
+  expl: "Space in front — the two-second rule for following distance."
+},
+{
+  q: "If brake failure occurs, what should you do?",
+  opts: ["Turn off the engine", "Pump the brake pedal, use emergency/parking brake gradually, downshift", "Honk and keep driving", "Turn on hazard lights only"],
+  ans: 1,
+  expl: "Brake failure: pump the brake, use emergency/parking brake gradually, downshift."
+},
+{
+  q: "If a tire blows out while driving, you should:",
+  opts: ["Brake hard immediately", "Hold the steering wheel firmly, ease off the accelerator, brake gently", "Turn off the engine", "Accelerate to stop quickly"],
+  ans: 1,
+  expl: "Tire blowout: hold steering firmly, ease off accelerator, brake gently."
+},
+{
+  q: "When preparing for winter driving, which is required?",
+  opts: ["Remove all cargo", "Four snow tires, check battery, check exhaust for leaks, use winter-grade fluids", "Only chains", "Only check the oil"],
+  ans: 1,
+  expl: "Winter prep: four snow tires, check battery, check exhaust leaks, winter-grade fluids, know how to mount chains."
+},
+{
+  q: "To reduce fuel consumption you should:",
+  opts: ["Jackrabbit start and stop", "Avoid sudden starts/stops, drive at steady speeds, avoid idling over 60 seconds", "Keep the engine racing", "Use AC at all speeds"],
+  ans: 1,
+  expl: "Smooth operator — avoid sudden starts/stops, steady speeds, avoid idling over 60 seconds."
+},
+{
+  q: "When sharing the road with motorcycles, you should:",
+  opts: ["Drive close to them", "Give them a full lane, check mirrors/blind spots before changing lanes", "Honk to warn them", "Pass them quickly in the same lane"],
+  ans: 1,
+  expl: "Give motorcycles a full lane; check mirrors and blind spots before lane changes."
+},
+{
+  q: "When approaching a stopped vehicle with flashing lights, you must:",
+  opts: ["Speed up and pass", "Slow down and move over if safe — includes stopped emergency vehicles", "Honk and pass", "Ignore if no sirens"],
+  ans: 1,
+  expl: "Stopped vehicles with flashing lights: slow down and move over if safe."
+},
+{
+  q: "At an uncontrolled intersection, the general right-of-way rule is:",
+  opts: ["Go first if you're bigger", "Yield to vehicles on your right", "Always go first", "Honk and proceed"],
+  ans: 1,
+  expl: "Standard right-of-way at uncontrolled intersections: yield to traffic on your right."
+},
+{
+  q: "When turning at an intersection with a traffic light, you must:",
+  opts: ["Turn immediately", "Signal, check for pedestrians/oncoming traffic, turn only when safe and legal", "Honk before turning", "Turn on hazard lights"],
+  ans: 1,
+  expl: "Signal, observe, turn when safe — standard turning procedure."
+},
+{
+  q: "If your hood flies up while driving, you should:",
+  opts: ["Brake hard immediately", "Look through the gap between the hood and windshield, brake gently, pull off road", "Accelerate", "Turn off headlights"],
+  ans: 1,
+  expl: "Hood flying up: look through the gap, brake gently, pull off the road."
+}
+];
+
+// Shuffle answers for each question and track the correct answer's new position
+const questions = rawQuestions.map(q => {
+  const indexed = q.opts.map((opt, i) => ({ text: opt, originalIndex: i }));
+  shuffle(indexed);
+  const newAns = indexed.findIndex(x => x.originalIndex === q.ans);
+  return {
+    q: q.q,
+    opts: indexed.map(x => x.text),
+    ans: newAns,
+    expl: q.expl
+  };
+});
+
+let current = 0;
+let score = 0;
+let answered = false;
+let userAnswers = new Array(questions.length).fill(null);
+
+function render() {
+  if (current >= questions.length) { showResult(); return; }
+  const q = questions[current];
+  answered = false;
+  const pct = ((current) / questions.length * 100).toFixed(0);
+  document.getElementById('progress').style.width = pct + '%';
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('feedback').textContent = '';
+
+  let html = `<div class="qnum">Question ${current + 1} of ${questions.length}</div>`;
+  html += `<div class="question">${q.q}</div>`;
+  html += `<div class="options">`;
+  q.opts.forEach((o, i) => {
+    html += `<label class="opt" onclick="select(${i})">
+      <input type="radio" name="ans" value="${i}">
+      <span>${String.fromCharCode(65 + i)}. ${o}</span>
+    </label>`;
+  });
+  html += `</div>`;
+  document.getElementById('quiz-area').innerHTML = html;
+}
+
+function select(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  userAnswers[current] = idx;
+  const opts = document.querySelectorAll('.opt');
+  opts.forEach((el, i) => {
+    el.classList.add('disabled');
+    if (i === q.ans) el.classList.add('correct');
+    if (i === idx && idx !== q.ans) el.classList.add('wrong');
+  });
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback show ' + (idx === q.ans ? 'correct' : 'wrong');
+  if (idx === q.ans) {
+    score++;
+    fb.innerHTML = `<strong>✅ Correct!</strong><br>${q.expl}`;
+  } else {
+    fb.innerHTML = `<strong>❌ Incorrect.</strong> The correct answer is <strong>${String.fromCharCode(65 + q.ans)}</strong>.<br>${q.expl}`;
+  }
+  const btn = document.getElementById('next-btn');
+  btn.style.display = 'inline-block';
+  btn.textContent = current < questions.length - 1 ? 'Next →' : 'See Results';
+}
+
+function nextQuestion() {
+  current++;
+  render();
+}
+
+function showResult() {
+  let pass = score >= 28 ? '🎉 PASS' : '❌ Not quite — study and retry';
+  document.getElementById('progress').style.width = '100%';
+  document.getElementById('quiz-area').innerHTML = `
+    <div class="result">
+      <h2>Quiz Complete</h2>
+      <div class="score">${score} / ${questions.length}</div>
+      <p><strong>${pass}</strong></p>
+      <p class="detail">You need 28/35 (80%) to pass the actual ICBC knowledge test.</p>
+      <div class="summary" id="summary"></div>
+      <button class="restart-btn" onclick="restart()">🔄 Retry Quiz</button>
+    </div>`;
+  const sum = document.getElementById('summary');
+  questions.forEach((q, i) => {
+    const ok = userAnswers[i] === q.ans;
+    const div = document.createElement('div');
+    div.className = 'summary-item';
+    div.innerHTML = `<span class="mark ${ok ? 'c' : 'w'}">${ok ? '✓' : '✗'} Q${i+1}</span> ${String.fromCharCode(65 + q.ans)}`;
+    sum.appendChild(div);
+  });
+  document.getElementById('next-btn').style.display = 'none';
+  document.getElementById('feedback').className = 'feedback';
+}
+
+function restart() {
+  current = 0;
+  score = 0;
+  userAnswers = new Array(questions.length).fill(null);
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
